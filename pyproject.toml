@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "temp"
+version = "0.1.0"
+description = ""
+authors = ["Alpha <piotr@piotryordanov.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10.3,<3.11"
+trading-strategy = {version = "^0.15.2", extras = ["direct-feed"]}
+ipython = "^8.13.2"
+matplotlib = "^3.7.1"
+pynvim = "^0.4.3"
+trade-executor = {git = "https://github.com/tradingstrategy-ai/trade-executor.git", rev = "master", extras = ["trade-executor", "qstrader", "quantstats"]}
+apscheduler = "^3.10.1"
+python-logging-discord-handler = "^0.1.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
