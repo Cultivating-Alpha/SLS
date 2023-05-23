@@ -1,19 +1,21 @@
+from threading import currentThread
 import pandas as pd
 from typing import List, Dict
-from typing import Optional
 
-from tradeexecutor.state.visualisation import PlotKind
+from lib.ts_backtester import Backtester
+from strategies.rsi_2.S_rsi_plot import plot
+
 from tradeexecutor.state.trade import TradeExecution
-from tradeexecutor.strategy.pricing_model import PricingModel
 from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
 from tradeexecutor.state.state import State
 from tradingstrategy.universe import Universe
 
-from pandas_ta.overlap import ema
+from pandas_ta.overlap import ema, sma
+from pandas_ta.momentum import rsi
 
 # |%%--%%| <SZUpNPeecJ|0odf4siOwY>
 
-batch_size = 90
+batch_size = 200
 slow_ema_candle_count = 15
 fast_ema_candle_count = 5
 position_size = 0.10
@@ -29,16 +31,18 @@ def calculate_indicators(universe: Universe, timestamp: pd.Timestamp):
     close = candles["close"]
 
     # Calculate exponential moving averages based on slow and fast sample numbers.
-    slow_ema_series = ema(close, length=slow_ema_candle_count)
-    fast_ema_series = ema(close, length=fast_ema_candle_count)
+    sma_short_series = sma(close, length=5)
+    sma_long_series = sma(close, length=200)
+    rsi_series = rsi(close, length=2)
 
-    if slow_ema_series is None or fast_ema_series is None:
+    if sma_long_series is None or rsi_series is None:
         return None, None
 
-    slow_ema = slow_ema_series.iloc[-1]
-    fast_ema = fast_ema_series.iloc[-1]
+    sma_long = sma_long_series.iloc[-1]
+    sma_short = sma_short_series.iloc[-1]
+    my_rsi = rsi_series.iloc[-1]
 
-    return fast_ema, slow_ema
+    return sma_short, sma_long, my_rsi
 
 
 def calculate_size(state):
@@ -51,13 +55,13 @@ def loop(
     timestamp: pd.Timestamp,
     universe: Universe,
     state: State,
-    pricing_model: PricingModel,
+    pricing_model,
     cycle_debug_data: Dict,
 ) -> List[TradeExecution]:
     # The pair we are trading
     pair = universe.pairs.get_single()
 
-    fast_ema, slow_ema = calculate_indicators(universe, timestamp)
+    sma_short, sma_long, my_rsi = calculate_indicators(universe, timestamp)
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
         timestamp, sample_count=batch_size
     )
@@ -65,12 +69,14 @@ def loop(
     # We have data for open, high, close, etc.
     # We only operate using candle close values in this strategy.
     close = candles["close"]
+    high = candles["high"]
+    low = candles["low"]
+    open = candles["open"]
 
-    if fast_ema is None or slow_ema is None:
+    if sma_short is None or sma_long is None:
         # Cannot calculate EMA, because
         # not enough samples in backtesting
         return []
-
     current_price = close.iloc[-1]
 
     # List of any trades we decide on this cycle.
@@ -83,36 +89,21 @@ def loop(
     # opening/closing trades for different positions
     position_manager = PositionManager(timestamp, universe, state, pricing_model)
 
-    if current_price >= slow_ema:
+    if current_price >= sma_long and current_price <= sma_short and my_rsi <= 10:
         # Entry condition:
-        # Close price is higher than the slow EMA
         if not position_manager.is_any_open():
+            print("====================")
+            print(open.iloc[-1], high.iloc[-1], low.iloc[-1], close.iloc[-1])
+            print(current_price, sma_long, sma_short)
             buy_amount = calculate_size(state)
             trades += position_manager.open_1x_long(pair, buy_amount)
-    elif fast_ema >= slow_ema:
+    elif current_price > sma_short:
         # Exit condition:
-        # Fast EMA crosses slow EMA
         if position_manager.is_any_open():
             trades += position_manager.close_all()
 
-    # Visualize strategy
-    # See available Plotly colours here
-    # https://community.plotly.com/t/plotly-colours-list/11730/3?u=miohtama
-    visualisation = state.visualisation
-    visualisation.plot_indicator(
-        timestamp,
-        "BB upper",
-        PlotKind.technical_indicator_on_price,
-        slow_ema,
-        colour="darkblue",
-    )
-    visualisation.plot_indicator(
-        timestamp,
-        "BB lower",
-        PlotKind.technical_indicator_on_price,
-        fast_ema,
-        colour="#003300",
-    )
+    # plot(state, timestamp, sma, rsi)
+    plot(state, timestamp, sma_long, sma_short, my_rsi)
 
     return trades
 
@@ -120,7 +111,6 @@ def loop(
 # |%%--%%| <0odf4siOwY|yQB6fLcUWK>
 
 import datetime
-from ts_backtester import Backtester
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
@@ -135,7 +125,7 @@ backtester.create_universe(
     exchange_slug="pancakeswap-v2",
 )
 backtester.backtest(start_at, end_at, loop)
-backtester.stats()
+# backtester.stats()
 # |%%--%%| <yQB6fLcUWK|jxQSz2zcWR>
 
 backtester.plot()

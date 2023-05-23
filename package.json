@@ -1,0 +1,23 @@
+{
+  "name": "ts-startegy",
+  "version": "1.0.0",
+  "description": "This is the code for a strategy running on top of [Trading Strategy](https://tradingstrategy.ai/docs/programming/)",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "poetry run python main.py",
+    "dev": "poetry shell; nvim main.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piotryordanov/ts-startegy.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/piotryordanov/ts-startegy/issues"
+  },
+  "homepage": "https://github.com/piotryordanov/ts-startegy#readme"
+}
