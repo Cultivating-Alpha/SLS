@@ -21,13 +21,7 @@ fast_ema_candle_count = 5
 position_size = 0.10
 
 
-def calculate_indicators(universe: Universe, timestamp: pd.Timestamp):
-    candles: pd.DataFrame = universe.candles.get_single_pair_data(
-        timestamp, sample_count=batch_size
-    )
-
-    # We have data for open, high, close, etc.
-    # We only operate using candle close values in this strategy.
+def calculate_indicators(candles, timestamp: pd.Timestamp):
     close = candles["close"]
 
     # Calculate exponential moving averages based on slow and fast sample numbers.
@@ -61,23 +55,26 @@ def loop(
     # The pair we are trading
     pair = universe.pairs.get_single()
 
-    sma_short, sma_long, my_rsi = calculate_indicators(universe, timestamp)
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
         timestamp, sample_count=batch_size
     )
 
-    # We have data for open, high, close, etc.
-    # We only operate using candle close values in this strategy.
-    close = candles["close"]
-    high = candles["high"]
-    low = candles["low"]
-    open = candles["open"]
+    sma_short, sma_long, my_rsi = calculate_indicators(candles, timestamp)
 
-    if sma_short is None or sma_long is None:
-        # Cannot calculate EMA, because
-        # not enough samples in backtesting
-        return []
+    open, high, low, close = (
+        candles["open"],
+        candles["high"],
+        candles["low"],
+        candles["close"],
+    )
+
+    # if sma_short is None or sma_long is None:
+    #     # Cannot calculate EMA, because
+    #     # not enough samples in backtesting
+    #     print("We have none")
+    #     return []
     current_price = close.iloc[-1]
+    # print(close)
 
     # List of any trades we decide on this cycle.
     # Because the strategy is simple, there can be
@@ -124,6 +121,7 @@ backtester.create_universe(
     chain_id=ChainId.bsc,
     exchange_slug="pancakeswap-v2",
 )
+
 backtester.backtest(start_at, end_at, loop)
 # backtester.stats()
 # |%%--%%| <yQB6fLcUWK|jxQSz2zcWR>

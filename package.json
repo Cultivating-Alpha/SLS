@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "poetry run python main.py",
-    "dev": "poetry shell; nvim main.py"
+    "dev": "poetry run nvim main.py"
   },
   "repository": {
     "type": "git",
