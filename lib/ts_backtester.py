@@ -9,11 +9,12 @@ from tradeexecutor.strategy.trading_strategy_universe import (
     load_all_data,
     TradingStrategyUniverse,
 )
-from tradeexecutor.strategy.execution_context import ExecutionContext
-from tradeexecutor.strategy.universe_model import UniverseOptions
-from tradingstrategy.client import Client
 import datetime
+from tradingstrategy.client import Client
 from tradingstrategy.timebucket import TimeBucket
+from tradeexecutor.strategy.universe_model import UniverseOptions
+from tradeexecutor.strategy.execution_context import ExecutionContext
+from tradeexecutor.analysis.trade_analyser import build_trade_analysis
 
 
 def create_trading_universe(
@@ -147,3 +148,11 @@ class Backtester:
         print("==========")
         print(f"Total return: {returns['Strategy']}")
         print(f"Max Drawdown: {dd['Strategy']}")
+
+    def general_stats(self):
+        analysis = build_trade_analysis(self.state.portfolio)
+
+        summary = analysis.calculate_summary_statistics()
+
+        with pd.option_context("display.max_row", None):
+            display(summary.to_dataframe())

@@ -28,19 +28,19 @@ def plot(state, timestamp, sma_long, sma_short, rsi):
         rsi,
         colour="#003300",
     )
-    visualisation.plot_indicator(
-        timestamp,
-        "upper",
-        PlotKind.technical_indicator_overlay_on_detached,
-        90,
-        colour="orange",
-        detached_overlay_name="RSI",
-    )
-    visualisation.plot_indicator(
-        timestamp,
-        "lower",
-        PlotKind.technical_indicator_overlay_on_detached,
-        10,
-        colour="orange",
-        detached_overlay_name="RSI",
-    )
+    # visualisation.plot_indicator(
+    #     timestamp,
+    #     "upper",
+    #     PlotKind.technical_indicator_overlay_on_detached,
+    #     90,
+    #     colour="orange",
+    #     detached_overlay_name="RSI",
+    # )
+    # visualisation.plot_indicator(
+    #     timestamp,
+    #     "lower",
+    #     PlotKind.technical_indicator_overlay_on_detached,
+    #     10,
+    #     colour="orange",
+    #     detached_overlay_name="RSI",
+    # )

@@ -40,15 +40,15 @@ def fetch_ohlc(
         timeframe,
         progress_bar_description=f"Download data for {pair.get_ticker()}",
     )
+    candles.drop(columns=["timestamp"], inplace=True)
 
     return candles
 
 
-candles = fetch_ohlc(
-    trading_pair=("WBNB", "BUSD"),
-    chain_id=ChainId.bsc,
-    exchange_slug="pancakeswap-v2",
-    timeframe=TimeBucket.h4,
-)
-candles.drop(columns=["timestamp"], inplace=True)
-candles
+# candles = fetch_ohlc(
+#     trading_pair=("WBNB", "BUSD"),
+#     chain_id=ChainId.bsc,
+#     exchange_slug="pancakeswap-v2",
+#     timeframe=TimeBucket.h4,
+# )
+# candles
