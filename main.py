@@ -49,6 +49,8 @@ ma_short = 9
 rsi_cutt = 13
 atr_distance = 2
 
+import numpy as np
+
 
 def get_signals(candles):
     close = candles["close"].iloc[-1]
@@ -65,7 +67,7 @@ def get_signals(candles):
     entry = close >= sma_long and rsi <= rsi_cutt
     exit = close > sma_short
     sl = low - atr * atr_distance
-    sl_pct = sl * 100 / candles["open"].iloc[-1]
+    sl_pct = float(round(sl / candles["open"].iloc[-1], 2))
 
     indicators = {
         "sma_short": sma_short,
@@ -73,7 +75,6 @@ def get_signals(candles):
         "rsi": rsi,
         "atr": atr,
     }
-
     return entry, exit, sl_pct, indicators
 
 
@@ -90,6 +91,15 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
         timestamp, sample_count=ma_long
     )
+
+    if len(candles) < ma_long:
+        # Backtest starting.
+        # By default get_single_pair_data() returns the candles prior to the `timestamp`,
+        # the behavior can be changed with get_single_pair_data(allow_current=True).
+        # At the start of the backtest, we do not have any previous candle available yet,
+        # so we cannot ask the the close price.
+        return trades
+
     current_price = candles["close"].iloc[-1]
 
     entry, exit, sl, indicators = get_signals(candles)
