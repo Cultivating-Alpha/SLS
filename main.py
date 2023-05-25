@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import List, Dict
+import datetime
 
 from lib.ts_backtester import Backtester
 from strategies.rsi_2.S_rsi_plot import plot
@@ -9,23 +9,37 @@ from tradeexecutor.strategy.pandas_trader.position_manager import PositionManage
 from tradeexecutor.state.state import State
 from tradingstrategy.universe import Universe
 
-from pandas_ta.overlap import ema, sma
 import pandas_ta as ta
 
 # |%%--%%| <7p077yvyxF|yQB6fLcUWK>
 
-import datetime
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
-backtester = Backtester()
-
-backtester.create_universe(
-    timeframe=TimeBucket.h4,
-    trading_pair=("WBNB", "BUSD"),
-    chain_id=ChainId.bsc,
-    exchange_slug="pancakeswap-v2",
+# Make sure that backtester is defined or not
+backtester = Backtester(
+    candle_time_bucket=TimeBucket.h4,
+    stop_loss_time_bucket=TimeBucket.h1,
+    trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
+    start_at=datetime.datetime(2023, 1, 1),
+    end_at=datetime.datetime(2023, 1, 4),
+    reserve_currency="USDC",
 )
+# try:
+#     backtester
+# except NameError:
+#     print("backtester is not defined")
+#     backtester = Backtester(
+#         timeframe=TimeBucket.h4,
+#         trading_pair=("WBNB", "BUSD"),
+#         chain_id=ChainId.bsc,
+#         exchange_slug="pancakeswap-v2",
+#     )
+#     timeframe=TimeBucket.h4,
+#     trading_pair=("WBNB", "BUSD"),
+#     chain_id=ChainId.bsc,
+#     exchange_slug="pancakeswap-v2",
+# )
 
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
@@ -33,112 +47,78 @@ backtester.create_universe(
 ma_long = 216
 ma_short = 9
 rsi_cutt = 13
-batch_size = ma_long
-import talib
+atr_distance = 2
 
 
-def calculate_indicators(candles, timestamp: pd.Timestamp):
-    close = candles["close"]
+def get_signals(candles):
+    close = candles["close"].iloc[-1]
+    low = candles["low"].iloc[-1]
 
-    # Calculate exponential moving averages based on slow and fast sample numbers.
-    sma_short_series = sma(close, length=ma_short)
-    sma_long_series = sma(close, length=ma_long)
-    rsi_series = ta.rsi(close, length=2)
-    # rsi_series = talib.RSI(close, timeperiod=2)
+    # Calculate indicators
+    sma_short = ta.sma(candles["close"], length=ma_short)
+    sma_short = ta.sma(candles["close"], length=ma_short).iloc[-1]
+    sma_long = ta.sma(candles["close"], length=ma_long).iloc[-1]
+    rsi = ta.rsi(candles["close"], length=2).iloc[-1]
+    atr = ta.atr(candles["high"], candles["low"], candles["close"], length=14).iloc[-1]
 
-    if sma_long_series is None or rsi_series is None:
-        return None, None
+    # Calculate signals
+    entry = close >= sma_long and rsi <= rsi_cutt
+    exit = close > sma_short
+    sl = low - atr * atr_distance
+    sl_pct = sl * 100 / candles["open"].iloc[-1]
 
-    sma_long = sma_long_series.iloc[-1]
-    sma_short = sma_short_series.iloc[-1]
-    my_rsi = rsi_series.iloc[-1]
+    indicators = {
+        "sma_short": sma_short,
+        "sma_long": sma_long,
+        "rsi": rsi,
+        "atr": atr,
+    }
 
-    return sma_short, sma_long, my_rsi
+    return entry, exit, sl_pct, indicators
 
 
 def calculate_size(state, close):
-    # How much cash we have in the hand
     cash = state.portfolio.get_current_cash()
     return cash * 0.99
-    # return cash
-    return cash / close
 
 
-def loop(
-    timestamp: pd.Timestamp,
-    universe: Universe,
-    state: State,
-    pricing_model,
-    cycle_debug_data: Dict,
-) -> List[TradeExecution]:
+def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     # The pair we are trading
+    trades = []
     pair = universe.pairs.get_single()
     pair.fee = 0.0050
 
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
-        timestamp, sample_count=batch_size
+        timestamp, sample_count=ma_long
     )
+    current_price = candles["close"].iloc[-1]
 
-    open, high, low, close = (
-        candles["open"],
-        candles["high"],
-        candles["low"],
-        candles["close"],
-    )
-    # print("==========")
-    # print(close)
-    sma_short, sma_long, my_rsi = calculate_indicators(candles, timestamp)
-
-    # if sma_short is None or sma_long is None:
-    #     # Cannot calculate EMA, because
-    #     # not enough samples in backtesting
-    #     print("We have none")
-    #     return []
-    current_price = close.iloc[-1]
-    # print(close)
-
-    # List of any trades we decide on this cycle.
-    # Because the strategy is simple, there can be
-    # only zero (do nothing) or 1 (open or close) trades
-    # decides
-    trades = []
+    entry, exit, sl, indicators = get_signals(candles)
 
     # Create a position manager helper class that allows us easily to create
     # opening/closing trades for different positions
     position_manager = PositionManager(timestamp, universe, state, pricing_model)
+    buy_amount = calculate_size(state, current_price)
 
-    if current_price >= sma_long and my_rsi <= rsi_cutt:
-        # Entry condition:
-        if not position_manager.is_any_open():
-            # print("====================")
-            # print(open.tail(3))
-            # print(high.tail(3))
-            # print(low.tail(3))
-            # print(close.tail(3))
-            # print("==========")
-            # print(sma_long)
-            # print(sma_short)
-            # print(my_rsi)
-            buy_amount = calculate_size(state, current_price)
-            trades += position_manager.open_1x_long(pair, buy_amount)
-    elif current_price > sma_short:
-        # Exit condition:
-        if position_manager.is_any_open():
+    if not position_manager.is_any_open():
+        if entry:
+            trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl)
+    else:
+        if exit:
             trades += position_manager.close_all()
 
-    # plot(state, timestamp, sma, rsi)
-    plot(state, timestamp, sma_long, sma_short, my_rsi)
+    # plot(state, timestamp, indicators)
 
     return trades
 
 
-start_at = datetime.datetime(2021, 7, 25)
-end_at = datetime.datetime(2021, 9, 11)
+start_at = datetime.datetime(2023, 1, 1)
+end_at = datetime.datetime(2023, 1, 4)
 
 
 backtester.backtest(start_at, end_at, loop)
-backtester.stats()
-backtester.general_stats()
+# backtester.stats()
+# backtester.general_stats()
 backtester.plot()
 
 # |%%--%%| <0odf4siOwY|twF6gWbIHX>
@@ -172,16 +152,3 @@ expanded_timeline.drop(
 expanded_timeline.head()
 
 # |%%--%%| <twF6gWbIHX|MWZUTmPv42>
-# |%%--%%| <MWZUTmPv42|tjbHOH24M2>
-#
-#
-# from lib.fetch_ohlc import fetch_ohlc
-#
-# candles = fetch_ohlc(
-#     timeframe=TimeBucket.h4,
-#     trading_pair=("WBNB", "BUSD"),
-#     chain_id=ChainId.bsc,
-#     exchange_slug="pancakeswap-v2",
-# )
-# candles
-# candles.to_parquet("WBNB-BUSD-h4.parquet")

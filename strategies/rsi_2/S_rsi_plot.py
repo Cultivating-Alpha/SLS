@@ -1,7 +1,7 @@
 from tradeexecutor.state.visualisation import PlotKind
 
 
-def plot(state, timestamp, sma_long, sma_short, rsi):
+def plot(state, timestamp, indicators):
     # Visualize strategy
     # See available Plotly colours here
     # https://community.plotly.com/t/plotly-colours-list/11730/3?u=miohtama
@@ -10,14 +10,14 @@ def plot(state, timestamp, sma_long, sma_short, rsi):
         timestamp,
         "SMA Long",
         PlotKind.technical_indicator_on_price,
-        sma_long,
+        indicators["sma_long"],
         colour="darkblue",
     )
     visualisation.plot_indicator(
         timestamp,
         "SMA Short",
         PlotKind.technical_indicator_on_price,
-        sma_short,
+        indicators["sma_short"],
         colour="darkblue",
     )
 
@@ -25,7 +25,7 @@ def plot(state, timestamp, sma_long, sma_short, rsi):
         timestamp,
         "RSI",
         PlotKind.technical_indicator_detached,
-        rsi,
+        indicators["rsi"],
         colour="#003300",
     )
     # visualisation.plot_indicator(
