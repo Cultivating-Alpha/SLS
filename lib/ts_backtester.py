@@ -112,7 +112,7 @@ class Backtester:
         end_at,
         decide_trades,
         initial_deposit=10_000,
-        cycle_duration=CycleDuration.cycle_16h,
+        cycle_duration=CycleDuration.cycle_4h,
         reserve_currency=ReserveCurrency.busd,
         trade_routing=TradeRouting.pancakeswap_busd,
     ):
