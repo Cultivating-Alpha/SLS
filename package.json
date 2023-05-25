@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "poetry run python main.py",
-    "dev": "poetry run nvim main.py"
+    "dev": "poetry run nvim main.py",
+    "install": "poetry add 'git+https://github.com/tradingstrategy-ai/trade-executor.git@master[trade-executor,qstrader,quantstats]'"
   },
   "repository": {
     "type": "git",

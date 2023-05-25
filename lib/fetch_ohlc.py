@@ -4,11 +4,11 @@ from tradingstrategy.client import Client
 
 from pyarrow import Table
 from tradingstrategy.chain import ChainId
+from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.exchange import ExchangeUniverse
 from tradingstrategy.pair import PandasPairUniverse, DEXPair
 
 import pandas as pd
-from tradingstrategy.timebucket import TimeBucket
 
 
 def fetch_ohlc(
