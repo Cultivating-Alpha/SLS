@@ -21,8 +21,8 @@ backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
     stop_loss_time_bucket=TimeBucket.h1,
     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-    start_at=datetime.datetime(2023, 1, 1),
-    end_at=datetime.datetime(2023, 1, 4),
+    start_at=datetime.datetime(2021, 1, 1),
+    end_at=datetime.datetime(2023, 6, 4),
     reserve_currency="USDC",
 )
 # try:
@@ -86,7 +86,6 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     # The pair we are trading
     trades = []
     pair = universe.pairs.get_single()
-    pair.fee = 0.0050
 
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
         timestamp, sample_count=ma_long
@@ -102,22 +101,25 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     if not position_manager.is_any_open():
         if entry:
+            sl = 0.98
+            # trades += position_manager.open_1x_long(pair, buy_amount)
             trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl)
     else:
         if exit:
             trades += position_manager.close_all()
 
-    # plot(state, timestamp, indicators)
+    plot(state, timestamp, indicators)
 
     return trades
 
 
-start_at = datetime.datetime(2023, 1, 1)
-end_at = datetime.datetime(2023, 1, 4)
+start_at = datetime.datetime(2022, 1, 1)
+end_at = datetime.datetime(2022, 3, 8)
+# end_at = datetime.datetime(2023, 5, 8)
 
 
 backtester.backtest(start_at, end_at, loop)
-# backtester.stats()
+backtester.stats()
 # backtester.general_stats()
 backtester.plot()
 
@@ -149,6 +151,5 @@ expanded_timeline.drop(
     ],
     inplace=True,
 )
-expanded_timeline.head()
-
-# |%%--%%| <twF6gWbIHX|MWZUTmPv42>
+expanded_timeline
+expanded_timeline["PnL USD"]
