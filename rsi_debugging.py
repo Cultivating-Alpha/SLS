@@ -8,8 +8,9 @@ candles = fetch_ohlc(
     chain_id=ChainId.ethereum,
     exchange_slug="uniswap-v3",
     timeframe=TimeBucket.h4,
+    fee_tier=0.0005,
 )
-candles
+# candles
 
 # |%%--%%| <kLQsCpV8j8|luyIC8oahK>
 
@@ -17,7 +18,7 @@ import mplfinance as mpf
 
 
 df = candles[["open", "high", "low", "close", "volume"]]
-df = df.iloc[-100:]
+df = df.iloc[-500:]
 df.rename(
     {"open": "Open", "high": "High", "low": "Low", "close": "Close"},
     axis=1,
@@ -27,7 +28,15 @@ df.rename(
 df.reset_index(inplace=True)
 df.rename(columns={"timestamp": "Date"}, inplace=True)
 df.set_index("Date", inplace=True)
-mpf.plot(df, type="candle", volume=False, style="yahoo")
+
+rsi = ta.rsi(df["Close"], length=2)
+mpf.plot(
+    df,
+    type="candle",
+    volume=False,
+    style="yahoo",
+    addplot=[mpf.make_addplot(rsi, panel=1, color="blue")],
+)
 
 # |%%--%%| <luyIC8oahK|6ZQDjwLqIs>
 

@@ -122,8 +122,8 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     return trades
 
 
-start_at = datetime.datetime(2023, 1, 1)
-end_at = datetime.datetime(2023, 4, 4)
+start_at = datetime.datetime(2023, 3, 3)
+end_at = datetime.datetime(2023, 6, 1)
 
 
 backtester.backtest(start_at, end_at, loop)

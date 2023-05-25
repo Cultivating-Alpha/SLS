@@ -17,6 +17,7 @@ def fetch_ohlc(
     exchange_slug="pancakeswap-v2",
     pick_by_highest_vol=True,
     timeframe=TimeBucket.d1,
+    fee_tier=0.0005,
 ):
     client = Client.create_jupyter_client()
     # Fetch all exchange names, slugs and addresses
@@ -33,6 +34,7 @@ def fetch_ohlc(
         trading_pair[0],
         trading_pair[1],
         pick_by_highest_vol=pick_by_highest_vol,
+        fee_tier=fee_tier,
     )
 
     candles: pd.DataFrame = client.fetch_candles_by_pair_ids(
