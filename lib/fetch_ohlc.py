@@ -45,11 +45,11 @@ def fetch_ohlc(
     return candles
 
 
-candles = fetch_ohlc(
-    trading_pair=("WETH", "USDC"),
-    chain_id=ChainId.ethereum,
-    exchange_slug="uniswap-v3",
-    timeframe=TimeBucket.h1,
-)
-candles
-candles.to_parquet("uniswap-v3-WETH-USDC-h1.parquet")
+# candles = fetch_ohlc(
+#     trading_pair=("WETH", "USDC"),
+#     chain_id=ChainId.ethereum,
+#     exchange_slug="uniswap-v3",
+#     timeframe=TimeBucket.h4,
+# )
+# candles.to_parquet("uniswap-v3-WETH-USDC-h4.parquet")
+# candles

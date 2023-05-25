@@ -18,6 +18,7 @@ pynvim = "^0.4.3"
 trade-executor = {git = "https://github.com/tradingstrategy-ai/trade-executor.git", rev = "master", extras = ["trade-executor", "qstrader", "quantstats"]}
 apscheduler = "^3.10.1"
 python-logging-discord-handler = "^0.1.4"
+mplfinance = "^0.12.9b7"
 
 
 [build-system]

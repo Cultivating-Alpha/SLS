@@ -21,8 +21,8 @@ backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
     stop_loss_time_bucket=TimeBucket.h1,
     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-    start_at=datetime.datetime(2023, 1, 1),
-    end_at=datetime.datetime(2023, 1, 4),
+    start_at=datetime.datetime(2022, 1, 1),
+    end_at=datetime.datetime(2023, 10, 4),
     reserve_currency="USDC",
 )
 # try:
@@ -49,6 +49,8 @@ ma_short = 9
 rsi_cutt = 13
 atr_distance = 2
 
+import numpy as np
+
 
 def get_signals(candles):
     close = candles["close"].iloc[-1]
@@ -65,7 +67,7 @@ def get_signals(candles):
     entry = close >= sma_long and rsi <= rsi_cutt
     exit = close > sma_short
     sl = low - atr * atr_distance
-    sl_pct = sl * 100 / candles["open"].iloc[-1]
+    sl_pct = float(round(sl / candles["open"].iloc[-1], 2))
 
     indicators = {
         "sma_short": sma_short,
@@ -73,7 +75,6 @@ def get_signals(candles):
         "rsi": rsi,
         "atr": atr,
     }
-
     return entry, exit, sl_pct, indicators
 
 
@@ -91,6 +92,15 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     candles: pd.DataFrame = universe.candles.get_single_pair_data(
         timestamp, sample_count=ma_long
     )
+
+    if len(candles) < ma_long:
+        # Backtest starting.
+        # By default get_single_pair_data() returns the candles prior to the `timestamp`,
+        # the behavior can be changed with get_single_pair_data(allow_current=True).
+        # At the start of the backtest, we do not have any previous candle available yet,
+        # so we cannot ask the the close price.
+        return trades
+
     current_price = candles["close"].iloc[-1]
 
     entry, exit, sl, indicators = get_signals(candles)
@@ -107,17 +117,17 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
         if exit:
             trades += position_manager.close_all()
 
-    # plot(state, timestamp, indicators)
+    plot(state, timestamp, indicators)
 
     return trades
 
 
 start_at = datetime.datetime(2023, 1, 1)
-end_at = datetime.datetime(2023, 1, 4)
+end_at = datetime.datetime(2023, 4, 4)
 
 
 backtester.backtest(start_at, end_at, loop)
-# backtester.stats()
+backtester.stats()
 # backtester.general_stats()
 backtester.plot()
 
