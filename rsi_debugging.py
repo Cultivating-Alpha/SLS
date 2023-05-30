@@ -10,7 +10,9 @@ candles = fetch_ohlc(
     timeframe=TimeBucket.h4,
     fee_tier=0.0005,
 )
-# candles
+
+candles
+candles.to_parquet("./data/uniswap-v3-WETH-USDC-h4.parquet")
 
 # |%%--%%| <kLQsCpV8j8|luyIC8oahK>
 
@@ -41,10 +43,9 @@ mpf.plot(
 # |%%--%%| <luyIC8oahK|6ZQDjwLqIs>
 
 
-#### Same candle loaded from the website
-
 import pandas as pd
 import requests
+import mplfinance as mpf
 
 # Set the URL and headers
 url = "https://tradingstrategy.ai/api/candles?pair_id=2697765&exchange_type=uniswap_v3&time_bucket=4h"

@@ -123,14 +123,14 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     return trades
 
 
-start_at = datetime.datetime(2022, 1, 1)
-end_at = datetime.datetime(2022, 3, 8)
-# end_at = datetime.datetime(2023, 5, 8)
+start_at = datetime.datetime(2021, 9, 1)
+# end_at = datetime.datetime(2021, 10, 8)
+end_at = datetime.datetime(2021, 9, 7)
 
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
-# backtester.general_stats()
+backtester.general_stats()
 backtester.plot()
 
 # |%%--%%| <0odf4siOwY|twF6gWbIHX>
@@ -162,4 +162,4 @@ expanded_timeline.drop(
     inplace=True,
 )
 expanded_timeline
-expanded_timeline["PnL USD"]
+# expanded_timeline["PnL USD"]
