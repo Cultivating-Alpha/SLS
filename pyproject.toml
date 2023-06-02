@@ -11,7 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.10.3,<3.11"
-trading-strategy = {version = "^0.15.2", extras = ["direct-feed"]}
+trading-strategy = {version = "^0.16.1", extras = ["direct-feed"]}
 ipython = "^8.13.2"
 matplotlib = "^3.7.1"
 pynvim = "^0.4.3"

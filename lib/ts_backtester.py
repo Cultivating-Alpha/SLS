@@ -88,7 +88,7 @@ class Backtester:
     def __init__(
         self,
         candle_time_bucket=TimeBucket.h4,
-        stop_loss_time_bucket=TimeBucket.h1,
+        stop_loss_time_bucket=TimeBucket.m5,
         trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
         start_at=datetime.datetime(2023, 1, 1),
         end_at=datetime.datetime(2023, 6, 1),

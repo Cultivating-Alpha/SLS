@@ -4,22 +4,15 @@ import datetime
 from lib.ts_backtester import Backtester
 from strategies.rsi_2.S_rsi_plot import plot
 
-from tradeexecutor.state.trade import TradeExecution
-from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
-from tradeexecutor.state.state import State
-from tradingstrategy.universe import Universe
-
 import pandas_ta as ta
-
-# |%%--%%| <7p077yvyxF|yQB6fLcUWK>
-
+from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
 # Make sure that backtester is defined or not
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
-    stop_loss_time_bucket=TimeBucket.h1,
+    stop_loss_time_bucket=TimeBucket.m1,
     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
     start_at=datetime.datetime(2021, 1, 1),
     end_at=datetime.datetime(2023, 6, 4),
@@ -44,10 +37,10 @@ backtester = Backtester(
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
-ma_long = 216
-ma_short = 9
-rsi_cutt = 13
-atr_distance = 2
+ma_long = 200
+ma_short = 7
+rsi_cutt = 20
+atr_distance = 1
 
 import numpy as np
 
@@ -67,7 +60,7 @@ def get_signals(candles):
     entry = close >= sma_long and rsi <= rsi_cutt
     exit = close > sma_short
     sl = low - atr * atr_distance
-    sl_pct = float(round(sl / candles["open"].iloc[-1], 2))
+    sl_pct = float(round(sl / candles["open"].iloc[-1], 6))
 
     indicators = {
         "sma_short": sma_short,
@@ -75,7 +68,7 @@ def get_signals(candles):
         "rsi": rsi,
         "atr": atr,
     }
-    return entry, exit, sl_pct, indicators
+    return entry, exit, sl, sl_pct, indicators
 
 
 def calculate_size(state, close):
@@ -102,7 +95,7 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     current_price = candles["close"].iloc[-1]
 
-    entry, exit, sl, indicators = get_signals(candles)
+    entry, exit, sl, sl_pct, indicators = get_signals(candles)
 
     # Create a position manager helper class that allows us easily to create
     # opening/closing trades for different positions
@@ -111,9 +104,12 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     if not position_manager.is_any_open():
         if entry:
-            sl = 0.98
+            # sl = 0.98
             # trades += position_manager.open_1x_long(pair, buy_amount)
-            trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl)
+            print(sl)
+            print(sl_pct)
+            # sl = 0.98
+            trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl_pct)
     else:
         if exit:
             trades += position_manager.close_all()
@@ -123,17 +119,22 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
     return trades
 
 
-start_at = datetime.datetime(2021, 9, 1)
-# end_at = datetime.datetime(2021, 10, 8)
-end_at = datetime.datetime(2021, 9, 7)
+# start_at = datetime.datetime(2021, 9, 1)
+# end_at = datetime.datetime(2021, 9, 7)
+start_at = datetime.datetime(2023, 4, 18)
+end_at = datetime.datetime(2023, 4, 20)
+# end_at = datetime.datetime(2023, 5, 25)
+
+
+
+start_at = datetime.datetime(2021, 1, 1)
+end_at = datetime.datetime(2023, 9, 7)
 
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
 backtester.general_stats()
 backtester.plot()
-
-# |%%--%%| <0odf4siOwY|twF6gWbIHX>
 
 from tradeexecutor.analysis.trade_analyser import build_trade_analysis
 from IPython.core.display_functions import display
