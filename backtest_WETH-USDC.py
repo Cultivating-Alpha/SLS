@@ -10,40 +10,14 @@ from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
 # Make sure that backtester is defined or not
-# backtester = Backtester(
-#     candle_time_bucket=TimeBucket.h4,
-#     stop_loss_time_bucket=TimeBucket.m1,
-#     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-#     start_at=datetime.datetime(2021, 1, 1),
-#     end_at=datetime.datetime(2023, 6, 4),
-#     reserve_currency="USDC",
-# )
-
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
     stop_loss_time_bucket=TimeBucket.m1,
-    trading_pair=[(ChainId.polygon, "uniswap-v3", "WMATIC", "USDC", 0.0005)],
+    trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
     start_at=datetime.datetime(2021, 1, 1),
     end_at=datetime.datetime(2023, 6, 4),
     reserve_currency="USDC",
 )
-
-# try:
-#     backtester
-# except NameError:
-#     print("backtester is not defined")
-#     backtester = Backtester(
-#         timeframe=TimeBucket.h4,
-#         trading_pair=("WBNB", "BUSD"),
-#         chain_id=ChainId.bsc,
-#         exchange_slug="pancakeswap-v2",
-#     )
-#     timeframe=TimeBucket.h4,
-#     trading_pair=("WBNB", "BUSD"),
-#     chain_id=ChainId.bsc,
-#     exchange_slug="pancakeswap-v2",
-# )
-
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
@@ -138,42 +112,12 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
 
 
 start_at = datetime.datetime(2021, 7, 1)
-start_at = datetime.datetime(2022, 8, 30)
 end_at = datetime.datetime(2023, 6, 4)
+
+# |%%--%%| <0odf4siOwY|b0uXp3lsfi>
 
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
 # backtester.general_stats()
 # backtester.plot()
-
-# |%%--%%| <0odf4siOwY|nG9q1XPcyc>
-
-from tradeexecutor.analysis.trade_analyser import build_trade_analysis
-from IPython.core.display_functions import display
-
-analysis = build_trade_analysis(backtester.state.portfolio)
-from tradeexecutor.analysis.trade_analyser import expand_timeline
-
-timeline = analysis.create_timeline()
-
-expanded_timeline, apply_styles = expand_timeline(
-    backtester.universe.universe.exchanges, backtester.universe.universe.pairs, timeline
-)
-
-expanded_timeline.drop(
-    columns=[
-        "Id",
-        "Remarks",
-        "Exchange",
-        "Trade count",
-        "Duration",
-        "Base asset",
-        "Quote asset",
-        "PnL %",
-        "PnL % raw",
-    ],
-    inplace=True,
-)
-expanded_timeline
-# expanded_timeline["PnL USD"]

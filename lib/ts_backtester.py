@@ -118,7 +118,6 @@ class Backtester:
     ):
         self.start_at = start_at
         self.end_at = end_at
-        print(end_at)
 
         state, _, debug_dump = run_backtest_inline(
             name="BNB/USD EMA crossover example",
@@ -155,8 +154,8 @@ class Backtester:
 
         returns = metrics.loc["Cumulative Return"]
         dd = metrics.loc["Max Drawdown"]
-        with pd.option_context("display.max_row", None):
-            display(metrics)
+        # with pd.option_context("display.max_row", None):
+        #     display(metrics)
         print("==========")
         print(f"Total return: {returns['Strategy']}")
         print(f"Max Drawdown: {dd['Strategy']}")

@@ -28,6 +28,7 @@ def fetch_ohlc(
     pair_universe = PandasPairUniverse(pair_table.to_pandas())
 
     exchange = exchange_universe.get_by_chain_and_slug(chain_id, exchange_slug)
+    print(exchange)
 
     pair: DEXPair = pair_universe.get_one_pair_from_pandas_universe(
         exchange.exchange_id,
@@ -47,11 +48,28 @@ def fetch_ohlc(
     return candles
 
 
-# candles = fetch_ohlc(
-#     trading_pair=("WETH", "USDC"),
-#     chain_id=ChainId.ethereum,
-#     exchange_slug="uniswap-v3",
-#     timeframe=TimeBucket.h4,
-# )
-# candles.to_parquet("uniswap-v3-WETH-USDC-h4.parquet")
-# candles
+candles = fetch_ohlc(
+    trading_pair=("WETH", "USDC"),
+    chain_id=ChainId.ethereum,
+    exchange_slug="uniswap-v3",
+    timeframe=TimeBucket.h4,
+)
+candles.to_parquet("uniswap-v3-WETH-USDC-h4.parquet")
+candles
+
+# Get PancakeSwap exchange,
+# for the full exchange list see https://tradingstrategy.ai/trading-view/exchanges
+pancake = exchange_universe.get_by_chain_and_slug(ChainId.bsc, "pancakeswap-v2")
+
+# Because there can be multiple trading pairs with same tickers,
+# we pick the genuine among the scams based on its trading volume
+wbnb_busd_pair = pair_universe.get_one_pair_from_pandas_universe(
+    pancake.exchange_id,
+    "WBNB",
+    "BUSD",
+    pick_by_highest_vol=True,
+    )
+
+print("WBNB address is", wbnb_busd_pair.base_token_address)
+print("BUSD address is", wbnb_busd_pair.quote_token_address)
+print("WBNB-BUSD pair contract address is", wbnb_busd_pair.address)
