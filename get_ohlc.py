@@ -11,12 +11,12 @@ def process_url(url):
     _df = pd.read_json(response.text)
 
     df = pd.DataFrame()
-    df['Open'] = _df['o']
-    df['High'] = _df['h']
-    df['Low'] = _df['l']
-    df['Close'] = _df['c']
-    df['Volume'] = _df['v']
-    df['Date'] = _df['ts']
+    df["Open"] = _df["o"]
+    df["High"] = _df["h"]
+    df["Low"] = _df["l"]
+    df["Close"] = _df["c"]
+    df["Volume"] = _df["v"]
+    df["Date"] = _df["ts"]
 
     df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%dT%H:%M:%S")
     df.set_index("Date", inplace=True)
@@ -24,17 +24,31 @@ def process_url(url):
 
 
 # Set the URL and headers
-for tf in ['4h', '1h', '1d', '15m']:
-    url = f"https://tradingstrategy.ai/api/candles?pair_id=2854973&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
-    df = process_url(url)
-    df.to_parquet( f"./data/uniswap_v3-polygon-WETH-USDC-{tf}.parquet")
+# for tf in ['4h', '1h', '1d', '15m']:
+#     url = f"https://tradingstrategy.ai/api/candles?pair_id=2854973&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
+#     df = process_url(url)
+#     df.to_parquet( f"./data/uniswap_v3-polygon-WETH-USDC-{tf}.parquet")
+#
+# for tf in ['4h', '1h', '1d', '15m']:
+#     url = f"https://tradingstrategy.ai/api/candles?pair_id=2697765&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
+#     df = process_url(url)
+#     df.to_parquet( f"./data/uniswap_v3-ethereum-WETH-USDC-{tf}.parquet")
+#
+# for tf in ['4h', '1h', '1d', '15m']:
+#     url = f"https://tradingstrategy.ai/api/candles?pair_id=2854997&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
+#     df = process_url(url)
+#     df.to_parquet( f"./data/uniswap_v3-polygon-WMATIC-USDC-{tf}.parquet")
 
-for tf in ['4h', '1h', '1d', '15m']:
-    url = f"https://tradingstrategy.ai/api/candles?pair_id=2697765&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
-    df = process_url(url)
-    df.to_parquet( f"./data/uniswap_v3-ethereum-WETH-USDC-{tf}.parquet")
 
-for tf in ['4h', '1h', '1d', '15m']:
-    url = f"https://tradingstrategy.ai/api/candles?pair_id=2854997&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
+for tf in ["4h"]:
+    url = f"https://tradingstrategy.ai/api/candles?pair_id=2993973&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
     df = process_url(url)
-    df.to_parquet( f"./data/uniswap_v3-polygon-WMATIC-USDC-{tf}.parquet")
+    df.to_parquet(f"./data/uniswap_v3-arbitrum-WBTC-USDC-{tf}.parquet")
+
+for tf in ["4h"]:
+    url = f"https://tradingstrategy.ai/api/candles?pair_id=2991521&exchange_type=uniswap_v3&time_bucket={tf}&start=2011-11-04"
+    df = process_url(url)
+    df.to_parquet(f"./data/uniswap_v3-arbitrum-WETH-USDC-{tf}.parquet")
+
+df = pd.read_parquet("./data/uniswap_v3-arbitrum-WETH-USDC-4h.parquet")
+df
