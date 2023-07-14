@@ -41,10 +41,10 @@ backtester = Backtester(
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
-ma_long = 113
-ma_short = 35
-rsi_cutt = 3
-atr_distance = 0.5
+ma_long = 123
+ma_short = 11
+rsi_cutt = 13
+atr_distance = 2.5
 # Expected 5.28
 
 
@@ -141,5 +141,5 @@ end_at = datetime.datetime(2023, 6, 4)
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
-# backtester.general_stats()
+backtester.general_stats()
 # backtester.plot()
