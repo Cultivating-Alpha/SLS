@@ -3,21 +3,21 @@ import datetime
 
 from lib.ts_backtester import Backtester
 from strategies.rsi_2.S_rsi_plot import plot
-import numpy as np
+
 import pandas_ta as ta
 from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
-# Make sure that backtester is defined or not
-# backtester = Backtester(
-#     candle_time_bucket=TimeBucket.h4,
-#     stop_loss_time_bucket=TimeBucket.m1,
-#     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-#     start_at=datetime.datetime(2021, 1, 1),
-#     end_at=datetime.datetime(2023, 6, 4),
-#     reserve_currency="USDC",
-# )
+# Set Jupyter Notebook output mode parameters
+# Used to avoid warnings
+from tradeexecutor.backtest.notebook import setup_charting_and_output
+
+setup_charting_and_output()
+
+from tradeexecutor.visual.equity_curve import calculate_equity_curve, calculate_returns
+from tradeexecutor.visual.equity_curve import visualise_equity_curve
+
 
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
@@ -151,3 +151,9 @@ backtester.backtest(start_at, end_at, loop)
 backtester.stats()
 backtester.general_stats()
 # backtester.plot()
+
+
+state = backtester.state
+curve = calculate_equity_curve(state)
+returns = calculate_returns(curve)
+visualise_equity_curve(returns)
