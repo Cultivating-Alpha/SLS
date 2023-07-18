@@ -3,7 +3,7 @@ import datetime
 
 from lib.ts_backtester import Backtester
 from strategies.rsi_2.S_rsi_plot import plot
-
+import numpy as np
 import pandas_ta as ta
 from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
 from tradingstrategy.timebucket import TimeBucket
