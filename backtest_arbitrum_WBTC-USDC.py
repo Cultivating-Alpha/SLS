@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime
+import numpy as np
 
 from lib.ts_backtester import Backtester
 from strategies.rsi_2.S_rsi_plot import plot
@@ -8,6 +9,15 @@ import pandas_ta as ta
 from tradeexecutor.strategy.pandas_trader.position_manager import PositionManager
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
+
+# Set Jupyter Notebook output mode parameters
+# Used to avoid warnings
+from tradeexecutor.backtest.notebook import setup_charting_and_output
+
+setup_charting_and_output()
+
+from tradeexecutor.visual.equity_curve import calculate_equity_curve, calculate_returns
+from tradeexecutor.visual.equity_curve import visualise_equity_curve
 
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
@@ -41,14 +51,11 @@ backtester = Backtester(
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
-ma_long = 113
-ma_short = 35
-rsi_cutt = 3
-atr_distance = 0.5
+ma_long = 123
+ma_short = 11
+rsi_cutt = 13
+atr_distance = 2.5
 # Expected 5.28
-
-
-import numpy as np
 
 
 def get_signals(candles):
@@ -141,5 +148,10 @@ end_at = datetime.datetime(2023, 6, 4)
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
-# backtester.general_stats()
+backtester.general_stats()
 # backtester.plot()
+
+state = backtester.state
+curve = calculate_equity_curve(state)
+returns = calculate_returns(curve)
+visualise_equity_curve(returns)

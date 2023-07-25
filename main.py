@@ -9,26 +9,27 @@ from tradeexecutor.strategy.pandas_trader.position_manager import PositionManage
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
-# Make sure that backtester is defined or not
-# backtester = Backtester(
-#     candle_time_bucket=TimeBucket.h4,
-#     stop_loss_time_bucket=TimeBucket.m1,
-#     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-#     start_at=datetime.datetime(2021, 1, 1),
-#     end_at=datetime.datetime(2023, 6, 4),
-#     reserve_currency="USDC",
-# )
+# Set Jupyter Notebook output mode parameters
+# Used to avoid warnings
+from tradeexecutor.backtest.notebook import setup_charting_and_output
+
+setup_charting_and_output()
+
+from tradeexecutor.visual.equity_curve import calculate_equity_curve, calculate_returns
+from tradeexecutor.visual.equity_curve import visualise_equity_curve
+
+###
 
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
     stop_loss_time_bucket=TimeBucket.m1,
-    trading_pair=[(ChainId.polygon, "uniswap-v3", "WMATIC", "USDC", 0.0005)],
+    trading_pair=[(ChainId.arbitrum, "uniswap-v3", "WBTC", "USDC", 0.0005)],
     # trading_pair=[
     #     (ChainId.arbitrum, "uniswap-v3", "WBTC", "USDC", 0.0005),
     #     # (ChainId.arbitrum, "uniswap-v3", "WETH", "USDC", 0.0005),
     # ],
     start_at=datetime.datetime(2021, 1, 1),
-    end_at=datetime.datetime(2023, 6, 4),
+    end_at=datetime.datetime(2023, 8, 4),
     reserve_currency="USDC",
 )
 
@@ -51,10 +52,12 @@ backtester = Backtester(
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
-ma_long = 295
+ma_long = 123
 ma_short = 11
-rsi_cutt = 9
+rsi_cutt = 13
 atr_distance = 2.5
+# Expected 5.28
+
 
 import numpy as np
 
@@ -132,9 +135,9 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
         if exit:
             current_sl = np.inf
             trades += position_manager.close_all()
-        elif current_price < current_sl:
-            current_sl = np.inf
-            trades += position_manager.close_all()
+        # elif current_price < current_sl:
+        #     current_sl = np.inf
+        #     trades += position_manager.close_all()
 
     plot(state, timestamp, indicators)
 
@@ -149,36 +152,10 @@ end_at = datetime.datetime(2023, 6, 4)
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
-# backtester.general_stats()
+backtester.general_stats()
 # backtester.plot()
 
-# |%%--%%| <0odf4siOwY|nG9q1XPcyc>
-
-from tradeexecutor.analysis.trade_analyser import build_trade_analysis
-from IPython.core.display_functions import display
-
-analysis = build_trade_analysis(backtester.state.portfolio)
-from tradeexecutor.analysis.trade_analyser import expand_timeline
-
-timeline = analysis.create_timeline()
-
-expanded_timeline, apply_styles = expand_timeline(
-    backtester.universe.universe.exchanges, backtester.universe.universe.pairs, timeline
-)
-
-expanded_timeline.drop(
-    columns=[
-        "Id",
-        "Remarks",
-        "Exchange",
-        "Trade count",
-        "Duration",
-        "Base asset",
-        "Quote asset",
-        "PnL %",
-        "PnL % raw",
-    ],
-    inplace=True,
-)
-expanded_timeline
-# expanded_timeline["PnL USD"]
+state = backtester.state
+curve = calculate_equity_curve(state)
+returns = calculate_returns(curve)
+visualise_equity_curve(returns)

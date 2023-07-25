@@ -9,15 +9,15 @@ from tradeexecutor.strategy.pandas_trader.position_manager import PositionManage
 from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 
-# Make sure that backtester is defined or not
-# backtester = Backtester(
-#     candle_time_bucket=TimeBucket.h4,
-#     stop_loss_time_bucket=TimeBucket.m1,
-#     trading_pair=[(ChainId.ethereum, "uniswap-v3", "WETH", "USDC", 0.0005)],
-#     start_at=datetime.datetime(2021, 1, 1),
-#     end_at=datetime.datetime(2023, 6, 4),
-#     reserve_currency="USDC",
-# )
+# Set Jupyter Notebook output mode parameters
+# Used to avoid warnings
+from tradeexecutor.backtest.notebook import setup_charting_and_output
+
+setup_charting_and_output()
+
+from tradeexecutor.visual.equity_curve import calculate_equity_curve, calculate_returns
+from tradeexecutor.visual.equity_curve import visualise_equity_curve
+
 
 backtester = Backtester(
     candle_time_bucket=TimeBucket.h4,
@@ -47,13 +47,25 @@ backtester = Backtester(
 
 # |%%--%%| <yQB6fLcUWK|0odf4siOwY>
 
-ma_long = 116
+ma_long = 117
 ma_short = 27
 rsi_cutt = 3
-atr_distance = 2.5
-# Expected 5.18
+atr_distance = 1
+# DD = 10% -- CAGR = 28.8% -- Total = 33.%  Total/DD = 3.3
 
-import numpy as np
+# DD = 10% -- CAGR = 28.8%
+
+# ma_long = 520
+# ma_short = 27
+# rsi_cutt = 3
+# atr_distance = 1
+# # DD = 17 -- CAGR = 34.03 -- Total = 50.8 -- Total/DD = 2.99
+#
+# ma_long = 104
+# ma_short = 28
+# rsi_cutt = 3
+# atr_distance = 1
+# # DD = 10.8 -- CAGR = 25.9 -- Total = 30.8 -- Total/DD = 2.85
 
 
 def get_signals(candles):
@@ -131,11 +143,17 @@ def loop(timestamp, universe, state, pricing_model, cycle_debug_data):
 
 # start_at = datetime.datetime(2021, 7, 1)
 # start_at = datetime.datetime(2022, 8, 30)
-start_at = datetime.datetime(2021, 9, 30)
+start_at = datetime.datetime(2021, 11, 30)
 end_at = datetime.datetime(2023, 6, 4)
 
 
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
-# backtester.general_stats()
+backtester.general_stats()
 # backtester.plot()
+
+
+state = backtester.state
+curve = calculate_equity_curve(state)
+returns = calculate_returns(curve)
+visualise_equity_curve(returns)

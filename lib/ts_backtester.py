@@ -8,6 +8,11 @@ from tradeexecutor.strategy.strategy_module import (
     TradeRouting,
     ReserveCurrency,
 )
+from tradeexecutor.backtest.notebook import setup_charting_and_output
+
+setup_charting_and_output()
+
+from tradeexecutor.visual.equity_curve import visualise_equity_curve
 
 from tradeexecutor.strategy.execution_context import ExecutionMode
 from tradeexecutor.visual.single_pair import visualise_single_pair
@@ -146,6 +151,11 @@ class Backtester:
         )
 
         figure.show()
+
+    def plot_dd(self):
+        curve = calculate_equity_curve(self.state)
+        returns = calculate_returns(curve)
+        visualise_equity_curve(returns)
 
     def stats(self):
         equity = calculate_equity_curve(self.state)
