@@ -149,9 +149,9 @@ end_at = datetime.datetime(2023, 6, 4)
 backtester.backtest(start_at, end_at, loop)
 backtester.stats()
 backtester.general_stats()
-# backtester.plot()
+backtester.plot()
 
-state = backtester.state
-curve = calculate_equity_curve(state)
-returns = calculate_returns(curve)
-visualise_equity_curve(returns)
+# state = backtester.state
+# curve = calculate_equity_curve(state)
+# returns = calculate_returns(curve)
+# visualise_equity_curve(returns)
