@@ -19,6 +19,7 @@ trade-executor = {git = "https://github.com/tradingstrategy-ai/trade-executor.gi
 apscheduler = "^3.10.1"
 python-logging-discord-handler = "^0.1.4"
 mplfinance = "^0.12.9b7"
+pandas-ta = "^0.3.14b0"
 
 
 [build-system]
