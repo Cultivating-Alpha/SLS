@@ -64,7 +64,7 @@ CHAIN_ID = ChainId.polygon
 TRADE_ROUTING = TradeRouting.uniswap_v3_usdc_poly
 
 # How often the strategy performs the decide_trades cycle.
-TRADING_STRATEGY_CYCLE = CycleDuration.cycle_1h
+TRADING_STRATEGY_CYCLE = CycleDuration.cycle_4h
 
 # Time bucket for our candles
 CANDLE_TIME_BUCKET = TimeBucket.h4
@@ -150,9 +150,6 @@ def calculate_size(state, close):
     return cash * 0.99
 
 
-current_sl = np.inf
-
-
 def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
     # The pair we are trading
     trades = []
@@ -173,7 +170,6 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
     current_price = candles["close"].iloc[-1]
 
     entry, exit, sl, sl_pct, indicators = get_signals(candles)
-    global current_sl
 
     # Create a position manager helper class that allows us easily to create
     # opening/closing trades for different positions
@@ -182,18 +178,10 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     if not position_manager.is_any_open():
         if entry:
-            # print(sl)
-            # sl = 0.98
-            current_sl = sl
             trades += position_manager.open_1x_long(pair, buy_amount)
-            # trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl_pct)
     else:
         if exit:
-            current_sl = np.inf
             trades += position_manager.close_all()
-        # elif current_price < current_sl:
-        #     current_sl = np.inf
-        #     trades += position_manager.close_all()
 
     plot(state, timestamp, indicators)
 
@@ -270,7 +258,6 @@ def create_trading_universe(
 #     (ChainId.arbitrum, "uniswap-v3", "WBTC", "USDC", 0.0005),
 #     # (ChainId.arbitrum, "uniswap-v3", "WETH", "USDC", 0.0005),
 # ],
-cycle_duration = CycleDuration.cycle_4h
 initial_deposit = 10_000
 start_at = datetime.datetime(2022, 12, 20)
 end_at = datetime.datetime(2023, 6, 4)
@@ -292,7 +279,7 @@ state, _, debug_dump = run_backtest_inline(
     start_at=start_at,
     end_at=end_at,
     client=client,
-    cycle_duration=cycle_duration,
+    cycle_duration=TRADING_STRATEGY_CYCLE,
     decide_trades=decide_trades,
     universe=universe,
     initial_deposit=initial_deposit,

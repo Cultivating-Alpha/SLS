@@ -63,14 +63,11 @@ CHAIN_ID = ChainId.polygon
 # and three way trades with BUSD-BNB hop.
 TRADE_ROUTING = TradeRouting.uniswap_v3_usdc_poly
 
-# How often the strategy performs the decide_trades cycle.
-TRADING_STRATEGY_CYCLE = CycleDuration.cycle_1h
-
 # Time bucket for our candles
 CANDLE_TIME_BUCKET = TimeBucket.h4
 
-# Candle time granularity we use to trigger stop loss checks
-STOP_LOSS_TIME_BUCKET = TimeBucket.m1
+# How often the strategy performs the decide_trades cycle.
+TRADING_STRATEGY_CYCLE = CycleDuration.cycle_4h
 
 # Strategy keeps its cash in USDC
 RESERVE_CURRENCY = ReserveCurrency.usdc
@@ -120,7 +117,6 @@ atr_distance = 1
 
 def get_signals(candles):
     close = candles["close"].iloc[-1]
-    low = candles["low"].iloc[-1]
 
     # Calculate indicators
     sma_short = ta.sma(candles["close"], length=ma_short)
@@ -133,8 +129,6 @@ def get_signals(candles):
 
     entry = close <= sma_short and close >= sma_long and rsi <= rsi_cutt
     exit = close > sma_short
-    sl = low - atr * atr_distance
-    sl_pct = float(round(sl / candles["open"].iloc[-1], 6))
 
     indicators = {
         "sma_short": sma_short,
@@ -142,15 +136,12 @@ def get_signals(candles):
         "rsi": rsi,
         "atr": atr,
     }
-    return entry, exit, sl, sl_pct, indicators
+    return entry, exit, indicators
 
 
 def calculate_size(state, close):
     cash = state.portfolio.get_current_cash()
     return cash * 0.99
-
-
-current_sl = np.inf
 
 
 def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
@@ -172,8 +163,7 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     current_price = candles["close"].iloc[-1]
 
-    entry, exit, sl, sl_pct, indicators = get_signals(candles)
-    global current_sl
+    entry, exit, indicators = get_signals(candles)
 
     # Create a position manager helper class that allows us easily to create
     # opening/closing trades for different positions
@@ -182,18 +172,10 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     if not position_manager.is_any_open():
         if entry:
-            # print(sl)
-            # sl = 0.98
-            current_sl = sl
             trades += position_manager.open_1x_long(pair, buy_amount)
-            # trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl_pct)
     else:
         if exit:
-            current_sl = np.inf
             trades += position_manager.close_all()
-        # elif current_price < current_sl:
-        #     current_sl = np.inf
-        #     trades += position_manager.close_all()
 
     plot(state, timestamp, indicators)
 
@@ -231,7 +213,6 @@ def create_trading_universe(
 # |%%--%%| <rUwLu5E5DN|iW34IuPLoq>
 
 
-cycle_duration = CycleDuration.cycle_4h
 initial_deposit = 10_000
 start_at = datetime.datetime(2022, 1, 1)
 end_at = datetime.datetime(2023, 6, 4)
@@ -253,7 +234,7 @@ state, _, debug_dump = run_backtest_inline(
     start_at=start_at,
     end_at=end_at,
     client=client,
-    cycle_duration=cycle_duration,
+    cycle_duration=TRADING_STRATEGY_CYCLE,
     decide_trades=decide_trades,
     universe=universe,
     initial_deposit=initial_deposit,
