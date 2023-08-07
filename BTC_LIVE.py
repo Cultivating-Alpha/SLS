@@ -48,7 +48,7 @@ from tradingstrategy.timebucket import TimeBucket
 from tradingstrategy.chain import ChainId
 from tradeexecutor.backtest.backtest_runner import run_backtest_inline
 
-TRADING_STRATEGY_ENGINE_VERSION = "0.1"
+TRADING_STRATEGY_ENGINE_VERSION = "0.2"
 
 # What kind of strategy we are running.
 # This tells we are going to use
