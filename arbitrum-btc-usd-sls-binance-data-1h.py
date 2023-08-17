@@ -104,47 +104,40 @@ def plot(state, timestamp, indicators):
 # rsi_cutt = 13
 # atr_distance = 2.5
 
-ma_long = 164
-ma_short = 29
-rsi_cutt = 7
+ma_long = 112
+ma_short = 6
+rsi_cutt = 8
 atr_distance = 2
 
 # Expected 5.28
 
 
 def get_signals(candles):
-    close = candles["close"].iloc[-1]
-    low = candles["low"].iloc[-1]
+    offset = -1
+    close = candles["close"].iloc[offset]
+    low = candles["low"].iloc[offset]
 
     # Calculate indicators
-    sma_short = ta.sma(candles["close"], length=ma_short)
-    sma_short = ta.sma(candles["close"], length=ma_short).iloc[-1]
-    sma_long = ta.sma(candles["close"], length=ma_long).iloc[-1]
-    rsi = ta.rsi(candles["close"], length=2).iloc[-1]
-    atr = ta.atr(candles["high"], candles["low"], candles["close"], length=14).iloc[-1]
+    sma_short = ta.sma(candles["close"], length=ma_short).iloc[offset]
+    sma_long = ta.sma(candles["close"], length=ma_long).iloc[offset]
+    rsi = ta.rsi(candles["close"], length=2).iloc[offset]
 
     # Calculate signals
 
     entry = close <= sma_short and close >= sma_long and rsi <= rsi_cutt
     exit = close > sma_short
-    sl = low - atr * atr_distance
-    sl_pct = float(round(sl / candles["open"].iloc[-1], 6))
 
     indicators = {
         "sma_short": sma_short,
         "sma_long": sma_long,
         "rsi": rsi,
-        "atr": atr,
     }
-    return entry, exit, sl, sl_pct, indicators
+    return entry, exit, indicators
 
 
 def calculate_size(state, close):
     cash = state.portfolio.get_current_cash()
-    return cash * 0.10
-
-
-current_sl = np.inf
+    return cash * 0.99
 
 
 def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
@@ -167,26 +160,21 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     current_price = candles["close"].iloc[-1]
 
-    entry, exit, sl, sl_pct, indicators = get_signals(candles)
-    global current_sl
+    entry, exit, indicators = get_signals(candles)
 
     # Create a position manager helper class that allows us easily to create
     # opening/closing trades for different positions
     position_manager = PositionManager(timestamp, universe, state, pricing_model)
-    buy_amount = calculate_size(state, current_price)
 
     if not position_manager.is_any_open():
         if entry:
-            # print(sl)
-            # sl = 0.98
-            current_sl = sl
-            print('===========================')
-            print(buy_amount)
+            # print(candles.iloc[-1])
+            # print(indicators)
+            buy_amount = calculate_size(state, current_price)
             trades += position_manager.open_1x_long(pair, buy_amount)
             # trades += position_manager.open_1x_long(pair, buy_amount, stop_loss_pct=sl_pct)
     else:
         if exit:
-            current_sl = np.inf
             trades += position_manager.close_all()
         # elif current_price < current_sl:
         #     current_sl = np.inf
@@ -196,42 +184,6 @@ def decide_trades(timestamp, universe, state, pricing_model, cycle_debug_data):
 
     return trades
 
-
-# def create_trading_universe(
-#     client: Client,
-#     trading_pair,
-#     start_at,
-#     end_at,
-#     execution_context,
-#     universe_options,
-#     reserve_currency,
-#     candle_time_bucket=TimeBucket.h4,
-#     stop_loss_time_bucket=TimeBucket.h1,
-# ) -> TradingStrategyUniverse:
-#     assert (
-#         not execution_context.mode.is_live_trading()
-#     ), f"Only strategy backtesting supported, got {execution_context.mode}"
-#
-#     # Load data for our trading pair whitelist
-#     dataset = load_partial_data(
-#         client=client,
-#         time_bucket=candle_time_bucket,
-#         pairs=trading_pair,
-#         execution_context=execution_context,
-#         universe_options=universe_options,
-#         stop_loss_time_bucket=stop_loss_time_bucket,
-#         start_at=start_at,
-#         end_at=end_at,
-#     )
-#
-#     # Filter down the dataset to the pairs we specified
-#     universe = TradingStrategyUniverse.create_multichain_universe_by_pair_descriptions(
-#         dataset,
-#         trading_pair,
-#         reserve_token_symbol=reserve_currency,
-#     )
-#
-#     return universe
 def create_trading_universe(
     ts: datetime.datetime,
     client: Client,
@@ -260,7 +212,6 @@ def create_trading_universe(
     return universe
 
 
-# |%%--%%| <tLEK0fJj5O|mPn1IrdBaa>
 
 import os
 from pathlib import Path
@@ -305,11 +256,13 @@ replace_candles(universe, new_candles, stop_loss_candles)
 
 # Change strategy backtesting period
 # to match Binance data
-start_at = datetime.datetime(2018, 1, 1)
-# end_at = datetime.datetime(2023, 8, 1)
-end_at = datetime.datetime(2018, 1, 10)
+start_at = datetime.datetime(2018, 1, 2)
+end_at = datetime.datetime(2023, 9, 1)
+# end_at = datetime.datetime(2018, 1, 10)
 
-# |%%--%%| <mPn1IrdBaa|pOXBY0YeYu>
+
+
+
 
 state, _, debug_dump = run_backtest_inline(
     name="SLS",
@@ -325,7 +278,7 @@ state, _, debug_dump = run_backtest_inline(
     log_level=logging.WARNING,
 )
 
-# |%%--%%| <pOXBY0YeYu|Sdi1wC7XJL>
+# |%%--%%| <mPn1IrdBaa|Sdi1wC7XJL>
 
 
 trade_count = len(list(state.portfolio.get_all_trades()))
@@ -350,10 +303,12 @@ summary = analysis.calculate_summary_statistics()
 
 with pd.option_context("display.max_row", None):
     display(summary.to_dataframe())
+
 #|%%--%%| <Sdi1wC7XJL|ozbp5HGkZb>
 
 """Single trading pair analysis"""
 import pandas as pd
+from _decimal import Decimal
 
 from tradeexecutor.state.position import TradingPosition
 from tradeexecutor.state.state import State
@@ -361,6 +316,7 @@ from tradeexecutor.state.state import State
 
 def expand_entries_and_exits(
     state: State,
+    token_quantizer=Decimal("0.000001"),
 ) -> pd.DataFrame:
     """Write out a table containing entries and exists of every taken position.
 
@@ -399,7 +355,7 @@ def expand_entries_and_exits(
             "Exit mid price": last_trade.price_structure.mid_price if last_trade else None,
             "PnL": p.get_total_profit_usd(),
             "Vol USD": volume,
-            f"Vol {symbol}": volume_token.quantize(token_quantizer),
+            "Vol ": volume_token.quantize(token_quantizer),
             "LP fee": fee,
         })
 
@@ -410,5 +366,25 @@ def expand_entries_and_exits(
 
 trades = expand_entries_and_exits(state)
 print(trades)
+# print(trades.iloc[0])
 len(trades)
 trades["PnL"].sum()
+
+trades.to_parquet("ts.parquet")
+
+
+
+# entry = 14501.05
+# exit = 14859.98
+# diff = exit - entry
+#
+# vol = initial_deposit * 0.99/ entry
+# fees = entry * vol * 0.0005 + exit * vol * 0.0005
+# pnl = diff * vol - fees
+#
+# print()
+# print()
+# print()
+# print("Expect PNL for first trade: ", pnl)
+# print("Expected fees: ",fees)
+# print("Expected volume: ", vol)
